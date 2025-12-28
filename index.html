@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casio fx-991ES PLUS Simulator</title>
+    <style>
+        /* --- CSS STYLING --- */
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Roboto+Mono:wght@500&display=swap');
+
+        body {
+            background-color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .calculator {
+            background-color: #d1d5db; /* Classic Silver Body */
+            width: 360px;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 
+                0 10px 25px rgba(0,0,0,0.4),
+                inset 0 2px 5px rgba(255,255,255,0.5);
+            position: relative;
+        }
+
+        /* Branding */
+        .brand {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: bold;
+            font-size: 0.8rem;
+            padding: 0 10px;
+        }
+        .model-number {
+            font-style: italic;
+            font-size: 1rem;
+        }
+
+        /* Display Screen */
+        .screen-container {
+            background-color: #a8c6a0; /* LCD Greenish tint */
+            border: 4px solid #333;
+            border-radius: 5px;
+            padding: 5px 10px;
+            margin-bottom: 15px;
+            height: 80px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+            font-family: 'Orbitron', monospace;
+            position: relative;
+        }
+
+        .screen-indicators {
+            font-size: 10px;
+            color: #000;
+            display: flex;
+            gap: 10px;
+            height: 15px;
+        }
+
+        .expression {
+            width: 100%;
+            height: 30px;
+            text-align: left;
+            font-size: 18px;
+            color: #000;
+            overflow-x: auto;
+            white-space: nowrap;
+            margin-top: 5px;
+        }
+
+        .result {
+            width: 100%;
+            height: 30px;
+            text-align: right;
+            font-size: 24px;
+            color: #000;
+            overflow-x: hidden;
+        }
+
+        /* Keyboard Layout */
+        .keyboard {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+        }
+
+        /* Button Base Styles */
+        button {
+            border: none;
+            border-radius: 5px;
+            height: 35px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            position: relative;
+            box-shadow: 0 2px #555;
+            transition: transform 0.1s;
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        button:active {
+            transform: translateY(2px);
+            box-shadow: none;
+        }
+
+        /* Specific Button Types */
+        .btn-func { /* Scientific functions (Black/Dark Grey) */
+            background-color: #373737;
+            color: white;
+            border-radius: 5px 5px 10px 10px;
+        }
+        
+        .btn-num { /* Numbers (Grey) */
+            background-color: #f0f0f0;
+            color: #333;
+            font-size: 16px;
+            border-radius: 8px;
+        }
+
+        .btn-shift { background-color: #c4ae36; color: #fff; font-size: 10px; } /* Shift - Yellow/Gold */
+        .btn-alpha { background-color: #d64a58; color: #fff; font-size: 10px; } /* Alpha - Red */
+        .btn-on    { background-color: #373737; color: white; }
+        
+        .btn-del   { background-color: #e69a63; color: white; } /* Orange */
+        .btn-ac    { background-color: #e69a63; color: white; } /* Orange */
+        
+        .btn-replay-container {
+            grid-column: span 2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .replay-btn {
+            width: 60px;
+            height: 40px;
+            border-radius: 50%;
+            background: #dcdcdc;
+            border: 1px solid #999;
+            box-shadow: 0 3px #777;
+        }
+
+        /* Large Bottom Buttons */
+        .span-2 { grid-column: span 2; }
+        
+        /* Shift Text (Labels above buttons) */
+        .btn-label {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 8px;
+            color: #bfa627; /* Gold for Shift */
+            white-space: nowrap;
+        }
+        .btn-label-red {
+            color: #d64a58; /* Red for Alpha */
+            top: -12px;
+            right: -5px;
+            left: auto;
+        }
+
+        /* Utility classes for grid positioning */
+        .row-top { margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="calculator">
+    <div class="brand">
+        <span>CASIO</span>
+        <span class="model-number">fx-991ES PLUS</span>
+        <span>NATURAL-V.P.A.M.</span>
+    </div>
+
+    <div class="screen-container">
+        <div class="screen-indicators">
+            <span id="shift-indicator" style="opacity: 0;">S</span>
+            <span id="mode-indicator">D</span> <span>Math</span>
+        </div>
+        <div class="expression" id="display-exp"></div>
+        <div class="result" id="display-res">0</div>
+    </div>
+
+    <div class="keyboard">
+        <button class="btn-shift" onclick="toggleShift()">SHIFT</button>
+        <button class="btn-alpha">ALPHA</button>
+        <div class="btn-replay-container">
+            <button class="replay-btn"></button>
+        </div>
+        <button class="btn-func" onclick="toggleMode()">MODE</button>
+        <button class="btn-on" onclick="clearAll()">ON</button>
+
+        <button class="btn-func" onclick="insert('(')">(</button>
+        <button class="btn-func" onclick="insert(')')">)</button>
+        <button class="btn-func" onclick="insertFunction('inv')">x⁻¹</button>
+        <button class="btn-func" onclick="insertFunction('log')">log</button>
+        <button class="btn-func" onclick="insertFunction('ln')">ln</button>
+        <button class="btn-func" onclick="insertFunction('sqrt')">√■</button>
+
+        <button class="btn-func" onclick="insertFunction('pow2')">x²</button>
+        <button class="btn-func" onclick="insertFunction('pow')">xⁿ</button>
+        <button class="btn-func" onclick="insertFunction('sin')">
+            sin<span class="btn-label">sin⁻¹</span>
+        </button>
+        <button class="btn-func" onclick="insertFunction('cos')">
+            cos<span class="btn-label">cos⁻¹</span>
+        </button>
+        <button class="btn-func" onclick="insertFunction('tan')">
+            tan<span class="btn-label">tan⁻¹</span>
+        </button>
+        <button class="btn-func" onclick="insert('/')">÷</button>
+
+        <button class="btn-num" onclick="insert('7')">7</button>
+        <button class="btn-num" onclick="insert('8')">8</button>
+        <button class="btn-num" onclick="insert('9')">9</button>
+        <button class="btn-del" onclick="backspace()">DEL</button>
+        <button class="btn-ac" onclick="clearAll()">AC</button>
+        <button class="btn-func" onclick="insert('*')">×</button>
+
+        <button class="btn-num" onclick="insert('4')">4</button>
+        <button class="btn-num" onclick="insert('5')">5</button>
+        <button class="btn-num" onclick="insert('6')">6</button>
+        <button class="btn-func" onclick="insert('*')">×</button> <button class="btn-func" onclick="insert('/')">÷</button> <button class="btn-func" onclick="insert('-')">-</button>
+
+        <button class="btn-num" onclick="insert('1')">1</button>
+        <button class="btn-num" onclick="insert('2')">2</button>
+        <button class="btn-num" onclick="insert('3')">3</button>
+        <button class="btn-func" onclick="insert('+')">+</button>
+        <button class="btn-func" onclick="insert('-')">-</button> <button class="btn-func" onclick="insert('+')">+</button> <button class="btn-num" onclick="insert('0')">0</button>
+        <button class="btn-num" onclick="insert('.')">.</button>
+        <button class="btn-num" onclick="insertConstant('PI')">×10ⁿ<span class="btn-label">π</span></button>
+        <button class="btn-num" onclick="insert('Ans')">Ans</button>
+        <button class="btn-num span-2" onclick="calculate()">=</button>
+    </div>
+</div>
+
+<script>
+    /* --- JAVASCRIPT LOGIC --- */
+    
+    let expression = ""; // The raw string for calculation
+    let displayString = ""; // The user-friendly string shown on screen
+    let isDegree = true; // Mode: Degree vs Radian
+    let isShift = false; // Shift key state
+    let lastAns = 0; // Memory for 'Ans'
+
+    const dispExp = document.getElementById('display-exp');
+    const dispRes = document.getElementById('display-res');
+    const shiftInd = document.getElementById('shift-indicator');
+    const modeInd = document.getElementById('mode-indicator');
+
+    // Update screen
+    function updateDisplay() {
+        dispExp.innerText = displayString || "";
+    }
+
+    // Toggle Shift Mode
+    function toggleShift() {
+        isShift = !isShift;
+        shiftInd.style.opacity = isShift ? 1 : 0;
+    }
+
+    // Toggle Deg/Rad Mode
+    function toggleMode() {
+        isDegree = !isDegree;
+        modeInd.innerText = isDegree ? 'D' : 'R';
+    }
+
+    // Insert Numbers/Operators
+    function insert(char) {
+        // Map visual multiplication/division to JS
+        if (char === 'Ans') {
+            expression += lastAns;
+            displayString += "Ans";
+        } else {
+            expression += char;
+            displayString += char;
+        }
+        updateDisplay();
+        
+        // Reset shift after single use if active
+        if(isShift) toggleShift(); 
+    }
+
+    // Insert Constants (Pi, e)
+    function insertConstant(constName) {
+        if (constName === 'PI') {
+            // If shift is pressed, it's Pi, else it's x10^ (simplified for this demo to just Pi for shift)
+            if (isShift) {
+                expression += Math.PI;
+                displayString += "π";
+                toggleShift();
+            } else {
+                expression += "*10**";
+                displayString += "×10^";
+            }
+        }
+        updateDisplay();
+    }
+
+    // Insert Scientific Functions
+    function insertFunction(type) {
+        if (type === 'sin') {
+            if (isShift) { // arcsin
+                expression += isDegree ? "Math.asin(" : "Math.asin("; // Logic handled in calc
+                displayString += "sin⁻¹(";
+                // Note: Real asin returns radians. We convert result to degrees if mode is D.
+            } else {
+                // We wrap the input in a helper to convert deg->rad if needed
+                expression += "trigOp('sin',";
+                displayString += "sin(";
+            }
+        } 
+        else if (type === 'cos') {
+            if (isShift) {
+                displayString += "cos⁻¹(";
+                expression += "Math.acos("; // Simplified: requires post-calc conversion
+            } else {
+                expression += "trigOp('cos',";
+                displayString += "cos(";
+            }
+        } 
+        else if (type === 'tan') {
+            if (isShift) {
+                displayString += "tan⁻¹(";
+                expression += "Math.atan(";
+            } else {
+                expression += "trigOp('tan',";
+                displayString += "tan(";
+            }
+        }
+        else if (type === 'sqrt') {
+            expression += "Math.sqrt(";
+            displayString += "√(";
+        }
+        else if (type === 'log') {
+            expression += "Math.log10(";
+            displayString += "log(";
+        }
+        else if (type === 'ln') {
+            expression += "Math.log(";
+            displayString += "ln(";
+        }
+        else if (type === 'pow2') {
+            expression += "**2";
+            displayString += "²";
+        }
+        else if (type === 'pow') {
+            expression += "**";
+            displayString += "^";
+        }
+        else if (type === 'inv') {
+            expression += "**-1";
+            displayString += "⁻¹";
+        }
+
+        updateDisplay();
+        if(isShift) toggleShift();
+    }
+
+    // Helper for Trig functions (Degrees conversion)
+    function trigOp(func, val) {
+        if (isDegree) {
+            // Convert degrees to radians for JS Math functions
+            return Math[func](val * (Math.PI / 180));
+        } else {
+            return Math[func](val);
+        }
+    }
+
+    // Clear All
+    function clearAll() {
+        expression = "";
+        displayString = "";
+        dispRes.innerText = "0";
+        updateDisplay();
+    }
+
+    // Backspace
+    function backspace() {
+        // This is a simple string slice. 
+        // For a perfect calc, we'd need a token stack, but this works for basic deletes.
+        expression = expression.slice(0, -1);
+        displayString = displayString.slice(0, -1);
+        updateDisplay();
+    }
+
+    // Calculate Result
+    function calculate() {
+        try {
+            // 1. Sanitize: Allow only math chars to prevent code injection
+            // (Basic check skipped for this client-side simulator, but good practice)
+            
+            // 2. Evaluate
+            // We use the Function constructor for a safer 'eval' in global scope
+            // We also need to close any unclosed parentheses roughly
+            let openParens = (expression.match(/\(/g) || []).length;
+            let closeParens = (expression.match(/\)/g) || []).length;
+            let tempExpr = expression + ")".repeat(openParens - closeParens);
+
+            // Execute
+            // We expose 'trigOp' and 'Math' to the scope
+            let result = new Function("return " + tempExpr)();
+
+            // 3. Format Result
+            // If result is huge or tiny, use scientific notation
+            if (String(result).length > 10 || Math.abs(result) < 0.00001 && result !== 0) {
+                result = result.toExponential(5);
+            } else {
+                // Limit decimals to fit screen
+                result = parseFloat(result.toPrecision(10));
+            }
+
+            dispRes.innerText = result;
+            lastAns = result;
+            
+            // Reset expression for next calculation? 
+            // Standard calc behavior: If you type operator next, it uses Ans. 
+            // If you type number, it resets.
+            // For simplicity here, we leave expression as is until user clears or types.
+            expression = String(result); 
+            displayString = String(result);
+
+        } catch (e) {
+            dispRes.innerText = "Syntax Error";
+            console.error(e);
+        }
+    }
+</script>
+
+</body>
+</html>
